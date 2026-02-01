@@ -15,12 +15,21 @@ function mustGet(name: string): string {
 
   // Helpful validation for Mongo URI to avoid confusing parse errors at startup.
   if (name === "MONGODB_URI") {
-    const s = String(v);
+    // Allow forgiving input where the full line was pasted as the value
+    // (e.g. "MONGODB_URI=mongodb://...") — strip the leading "MONGODB_URI=" if present.
+    let s = String(v);
+    if (s.startsWith(`${name}=`)) {
+      s = s.slice(name.length + 1);
+    }
+    s = s.trim();
     if (!/^mongodb(\+srv)?:\/\//i.test(s)) {
       throw new Error(
         `Invalid MONGODB_URI. It must start with "mongodb://" or "mongodb+srv://". Got: ${s}`
       );
     }
+
+    // use the possibly-stripped/trimmed string as the value
+    return s;
   }
 
   return String(v);
