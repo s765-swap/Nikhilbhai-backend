@@ -9,9 +9,21 @@ export type StaffUser = {
 };
 
 function mustGet(name: string): string {
-  const v = process.env[name];
+  const raw = process.env[name];
+  const v = typeof raw === "string" ? raw.trim() : raw;
   if (!v) throw new Error(`Missing env var ${name}`);
-  return v;
+
+  // Helpful validation for Mongo URI to avoid confusing parse errors at startup.
+  if (name === "MONGODB_URI") {
+    const s = String(v);
+    if (!/^mongodb(\+srv)?:\/\//i.test(s)) {
+      throw new Error(
+        `Invalid MONGODB_URI. It must start with "mongodb://" or "mongodb+srv://". Got: ${s}`
+      );
+    }
+  }
+
+  return String(v);
 }
 
 export const config = {
